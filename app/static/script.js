@@ -139,11 +139,12 @@ document.getElementById('searchForm').addEventListener('submit', async function(
             isExactSearch = false;
         }
         const response = await fetch(url);
-        const data = await response.json();
+        let data;
+        try { data = await response.json(); } catch (e) { data = {}; }
         loadingDiv.classList.remove('show');
 
-        if (data.error) {
-            errorDiv.textContent = data.error;
+        if (!response.ok || data.error) {
+            errorDiv.textContent = data.error || data.detail || 'حدث خطأ في الاستعلام';
             errorDiv.classList.add('show');
             return;
         }
