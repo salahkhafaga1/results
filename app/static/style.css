@@ -1,0 +1,108 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 500px;
+}
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 14px;
+}
+.form-group { margin-bottom: 20px; }
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 600;
+}
+input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 18px;
+    transition: border 0.3s;
+    text-align: center;
+    direction: ltr;
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+}
+button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+.result {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f8f9ff;
+    display: none;
+}
+.result.show { display: block; }
+.result h2 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e8e8ff;
+}
+.result-item:last-child { border-bottom: none; }
+.result-label { color: #888; font-weight: 600; }
+.result-value { color: #333; font-weight: 700; }
+.error {
+    margin-top: 25px;
+    padding: 15px;
+    background: #fff0f0;
+    color: #d32f2f;
+    border-radius: 10px;
+    text-align: center;
+    display: none;
+    font-weight: 600;
+}
+.error.show { display: block; }
+.loading {
+    margin-top: 25px;
+    text-align: center;
+    color: #667eea;
+    display: none;
+    font-weight: 600;
+}
+.loading.show { display: block; }

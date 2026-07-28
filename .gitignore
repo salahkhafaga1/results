@@ -1,5 +1,5 @@
 __pycache__/
 *.pyc
-results.db
+*.db
 *.xlsx
 test_server.py
