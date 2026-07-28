@@ -98,11 +98,15 @@ function renderDropdown(results, query) {
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escaped, 'gi');
     suggestions.innerHTML = results.map(s => {
-        const safe = s.arabic_name
+        const display = s.short_name || s.arabic_name;
+        const safe = display
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const fullSafe = s.arabic_name
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         const highlighted = safe.replace(regex, (m) => `<mark>${m}</mark>`);
-        return `<div class="item" data-seating="${s.seating_no}" data-name="${safe}">${highlighted}</div>`;
+        return `<div class="item" data-seating="${s.seating_no}" data-name="${fullSafe}">${highlighted}</div>`;
     }).join('');
     suggestions.classList.add('show');
 }

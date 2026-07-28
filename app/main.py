@@ -35,6 +35,10 @@ app = FastAPI()
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
+def short_name(full: str) -> str:
+    parts = full.split()
+    return " ".join(parts[:2]) if len(parts) >= 2 else parts[0] if parts else ""
+
 def query_student(seating_no: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -99,6 +103,8 @@ async def api_search(name: str = ""):
     if len(name) < 2:
         return {"results": [], "count": 0}
     results = search_by_name(name, limit=10)
+    for r in results:
+        r["short_name"] = short_name(r["arabic_name"])
     return {"results": results, "count": len(results)}
 
 @app.get("/", response_class=HTMLResponse)
