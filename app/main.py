@@ -87,8 +87,8 @@ async def search(seating_no: str = None, name: str = None, exact: str = "0"):
         }
     if name:
         name = name.strip()
-        if len(name) < 3 and exact != "1":
-            return {"error": "يرجى إدخال 3 أحرف على الأقل للبحث بالاسم"}
+        if len(name) < 2 and exact != "1":
+            return {"error": "يرجى إدخال حرفين على الأقل للبحث بالاسم"}
         results = search_by_name(name, exact=(exact == "1"))
         if not results:
             return {"error": f"لم يتم العثور على طالب بهذا الاسم"}

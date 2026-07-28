@@ -1,5 +1,5 @@
 let searchMode = 'seating';
-const MIN_NAME_LENGTH = 3;
+const MIN_NAME_LENGTH = 2;
 let suggestTimeout = null;
 let selectedSuggestion = -1;
 let isExactSearch = false;
@@ -113,7 +113,7 @@ document.getElementById('searchForm').addEventListener('submit', async function(
     e.preventDefault();
     const query = document.getElementById('searchInput').value.trim();
     if (searchMode === 'name' && query.length < MIN_NAME_LENGTH) {
-        showError('يرجى إدخال 3 أحرف على الأقل للبحث بالاسم');
+        showError('يرجى إدخال حرفين على الأقل للبحث بالاسم');
         return;
     }
     doSearch(query);
