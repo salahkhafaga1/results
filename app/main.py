@@ -60,7 +60,7 @@ def search_by_name(name: str, exact: bool = False, limit: int = 100):
 def suggest_names(query: str):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT DISTINCT arabic_name FROM results WHERE arabic_name LIKE ? LIMIT 50", (f"{query}%",))
+    c.execute("SELECT DISTINCT arabic_name FROM results WHERE arabic_name LIKE ? LIMIT 10", (f"{query}%",))
     rows = [r[0] for r in c.fetchall()]
     conn.close()
     return rows

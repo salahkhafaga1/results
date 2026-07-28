@@ -2,6 +2,7 @@ let searchMode = 'seating';
 const MIN_NAME_LENGTH = 3;
 let suggestTimeout = null;
 let selectedSuggestion = -1;
+let isExactSearch = false;
 
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
@@ -82,7 +83,11 @@ async function fetchSuggestions(query) {
 
 function renderSuggestions(names, query) {
     const el = document.getElementById('suggestions');
-    if (!names.length) { el.classList.remove('show'); return; }
+    if (!names.length) {
+        el.innerHTML = '<div class="item" style="color:#999;cursor:default">لا توجد نتائج</div>';
+        el.classList.add('show');
+        return;
+    }
     el.innerHTML = names.map(n => {
         const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
         const highlighted = n.replace(regex, '<mark>$1</mark>');
@@ -97,8 +102,6 @@ function selectSuggestion(name) {
     isExactSearch = true;
     document.getElementById('searchForm').dispatchEvent(new Event('submit'));
 }
-
-let isExactSearch = false;
 
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.input-wrapper')) {
