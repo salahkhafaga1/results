@@ -30,7 +30,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-// Autocomplete suggestions
 document.getElementById('searchInput').addEventListener('input', function() {
     const suggestions = document.getElementById('suggestions');
     if (searchMode === 'seating') {
@@ -74,33 +73,34 @@ function updateHighlight(items) {
 async function fetchSuggestions(query) {
     try {
         const resp = await fetch(`/suggest?q=${encodeURIComponent(query)}`);
+        if (!resp.ok) return;
         const data = await resp.json();
         renderSuggestions(data.names, query);
-    } catch (e) {
-        // ignore
-    }
+    } catch (e) {}
 }
 
 function renderSuggestions(names, query) {
     const el = document.getElementById('suggestions');
-    if (!names.length) {
+    if (!names || !names.length) {
         el.innerHTML = '<div class="item" style="color:#999;cursor:default">لا توجد نتائج</div>';
         el.classList.add('show');
         return;
     }
     el.innerHTML = names.map(n => {
+        const safe = n.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
         const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-        const highlighted = n.replace(regex, '<mark>$1</mark>');
-        return `<div class="item" onclick="selectSuggestion('${n.replace(/'/g, "\\'")}')">${highlighted}</div>`;
+        const highlighted = safe.replace(regex, '<mark>$1</mark>');
+        return `<div class="item" data-name="${safe}" onclick="selectSuggestion(this)">${highlighted}</div>`;
     }).join('');
     el.classList.add('show');
 }
 
-function selectSuggestion(name) {
+function selectSuggestion(el) {
+    const name = el.dataset.name;
     document.getElementById('searchInput').value = name;
     document.getElementById('suggestions').classList.remove('show');
     isExactSearch = true;
-    document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+    doSearch(name);
 }
 
 document.addEventListener('click', function(e) {
@@ -112,6 +112,14 @@ document.addEventListener('click', function(e) {
 document.getElementById('searchForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const query = document.getElementById('searchInput').value.trim();
+    if (searchMode === 'name' && query.length < MIN_NAME_LENGTH) {
+        showError('يرجى إدخال 3 أحرف على الأقل للبحث بالاسم');
+        return;
+    }
+    doSearch(query);
+});
+
+async function doSearch(query) {
     const errorDiv = document.getElementById('error');
     const loadingDiv = document.getElementById('loading');
     const container = document.getElementById('resultsContainer');
@@ -125,27 +133,23 @@ document.getElementById('searchForm').addEventListener('submit', async function(
         if (searchMode === 'seating') {
             url = `/search?seating_no=${encodeURIComponent(query)}`;
         } else {
-            if (query.length < MIN_NAME_LENGTH) {
-                loadingDiv.classList.remove('show');
-                errorDiv.textContent = 'يرجى إدخال 3 أحرف على الأقل للبحث بالاسم';
-                errorDiv.classList.add('show');
-                return;
-            }
             url = `/search?name=${encodeURIComponent(query)}`;
         }
-
         if (searchMode === 'name' && isExactSearch) {
             url += '&exact=1';
             isExactSearch = false;
         }
-        const response = await fetch(url);
+
+        const resp = await fetch(url);
         let data;
-        try { data = await response.json(); } catch (e) { data = {}; }
+        try { data = await resp.json(); } catch (e) { data = {}; }
         loadingDiv.classList.remove('show');
 
-        if (!response.ok || data.error) {
-            errorDiv.textContent = data.error || data.detail || 'حدث خطأ في الاستعلام';
-            errorDiv.classList.add('show');
+        if (!resp.ok || data.error) {
+            const msg = typeof data.error === 'string' ? data.error :
+                       Array.isArray(data.detail) ? data.detail.map(d => d.msg || JSON.stringify(d)).join('; ') :
+                       data.detail || 'حدث خطأ في الاستعلام';
+            showError(msg);
             return;
         }
 
@@ -156,10 +160,15 @@ document.getElementById('searchForm').addEventListener('submit', async function(
         }
     } catch (err) {
         loadingDiv.classList.remove('show');
-        errorDiv.textContent = 'حدث خطأ في الاتصال بالخادم';
-        errorDiv.classList.add('show');
+        showError('حدث خطأ في الاتصال بالخادم');
     }
-});
+}
+
+function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.classList.add('show');
+}
 
 function renderSingleResult(data) {
     const container = document.getElementById('resultsContainer');
@@ -200,5 +209,5 @@ function searchBySeating(no) {
     document.querySelector('[data-mode="seating"]').classList.add('active');
     searchMode = 'seating';
     document.getElementById('searchLabel').textContent = 'رقم الجلوس';
-    document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+    doSearch(no);
 }
