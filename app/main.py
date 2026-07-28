@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -63,8 +63,11 @@ def suggest_names(query: str):
     return rows
 
 @app.get("/suggest")
-async def suggest(q: str = Query(..., min_length=2)):
-    return {"names": suggest_names(q.strip())}
+async def suggest(q: str = ""):
+    q = q.strip()
+    if len(q) < 2:
+        return {"names": []}
+    return {"names": suggest_names(q)}
 
 @app.get("/search")
 async def search(seating_no: str = None, name: str = None, exact: str = "0"):
@@ -91,7 +94,10 @@ async def search(seating_no: str = None, name: str = None, exact: str = "0"):
     return {"error": "يرجى إدخال رقم جلوس أو اسم"}
 
 @app.get("/api/search")
-async def api_search(name: str = Query(..., min_length=2)):
+async def api_search(name: str = ""):
+    name = name.strip()
+    if len(name) < 2:
+        return {"results": [], "count": 0}
     results = search_by_name(name, limit=10)
     return {"results": results, "count": len(results)}
 

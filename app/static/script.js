@@ -82,10 +82,11 @@ function highlightItem(items) {
 async function fetchSuggestions(query) {
     try {
         const resp = await fetch(`/api/search?name=${encodeURIComponent(query)}`);
-        if (!resp.ok) return;
-        const data = await resp.json();
+        const data = resp.ok ? await resp.json() : { results: [] };
         renderDropdown(data.results, query);
-    } catch (_) {}
+    } catch (_) {
+        renderDropdown([], query);
+    }
 }
 
 function renderDropdown(results, query) {
