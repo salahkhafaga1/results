@@ -94,8 +94,11 @@ function renderSuggestions(names, query) {
 function selectSuggestion(name) {
     document.getElementById('searchInput').value = name;
     document.getElementById('suggestions').classList.remove('show');
+    isExactSearch = true;
     document.getElementById('searchForm').dispatchEvent(new Event('submit'));
 }
+
+let isExactSearch = false;
 
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.input-wrapper')) {
@@ -128,6 +131,10 @@ document.getElementById('searchForm').addEventListener('submit', async function(
             url = `/search?name=${encodeURIComponent(query)}`;
         }
 
+        if (searchMode === 'name' && isExactSearch) {
+            url += '&exact=1';
+            isExactSearch = false;
+        }
         const response = await fetch(url);
         const data = await response.json();
         loadingDiv.classList.remove('show');

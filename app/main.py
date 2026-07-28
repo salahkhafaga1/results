@@ -46,18 +46,21 @@ def query_student(seating_no: int):
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-def search_by_name(name: str, limit: int = 20):
+def search_by_name(name: str, exact: bool = False, limit: int = 100):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT seating_no, arabic_name, total_degree, student_case_desc FROM results WHERE arabic_name LIKE ? LIMIT ?", (f"%{name}%", limit))
+    if exact:
+        c.execute("SELECT seating_no, arabic_name, total_degree, student_case_desc FROM results WHERE arabic_name = ? LIMIT ?", (name, limit))
+    else:
+        c.execute("SELECT seating_no, arabic_name, total_degree, student_case_desc FROM results WHERE arabic_name LIKE ? LIMIT ?", (f"%{name}%", limit))
     rows = c.fetchall()
     conn.close()
     return [{"seating_no": r[0], "arabic_name": r[1], "total_degree": r[2], "student_case_desc": r[3]} for r in rows]
 
-def suggest_names(query: str, limit: int = 8):
+def suggest_names(query: str):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT DISTINCT arabic_name FROM results WHERE arabic_name LIKE ? LIMIT ?", (f"%{query}%", limit))
+    c.execute("SELECT DISTINCT arabic_name FROM results WHERE arabic_name LIKE ? LIMIT 50", (f"{query}%",))
     rows = [r[0] for r in c.fetchall()]
     conn.close()
     return rows
@@ -69,7 +72,7 @@ async def suggest(q: str):
     return {"names": suggest_names(q.strip())}
 
 @app.get("/search")
-async def search(seating_no: str = None, name: str = None):
+async def search(seating_no: str = None, name: str = None, exact: str = "0"):
     if seating_no:
         if not seating_no.isdigit():
             return {"error": "يرجى إدخال رقم جلوس صحيح"}
@@ -83,9 +86,10 @@ async def search(seating_no: str = None, name: str = None):
             "student_case_desc": row[3]
         }
     if name:
-        if len(name.strip()) < 3:
+        name = name.strip()
+        if len(name) < 3 and exact != "1":
             return {"error": "يرجى إدخال 3 أحرف على الأقل للبحث بالاسم"}
-        results = search_by_name(name.strip())
+        results = search_by_name(name, exact=(exact == "1"))
         if not results:
             return {"error": f"لم يتم العثور على طالب بهذا الاسم"}
         return {"results": results, "count": len(results)}
