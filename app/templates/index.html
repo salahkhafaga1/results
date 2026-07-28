@@ -9,17 +9,23 @@
 <body>
     <div class="container">
         <h1>📄 نتيجة الثانوية العامة</h1>
-        <p class="subtitle">أدخل رقم الجلوس لعرض النتيجة</p>
+        <p class="subtitle">ابحث برقم الجلوس أو بالاسم</p>
+
+        <div class="tabs">
+            <button class="tab active" data-mode="seating">رقم الجلوس</button>
+            <button class="tab" data-mode="name">الاسم</button>
+        </div>
+
         <form id="searchForm">
-            <div class="form-group">
-                <label for="seatingNo">رقم الجلوس</label>
-                <input type="text" id="seatingNo" placeholder="مثال: 2001970" inputmode="numeric" pattern="[0-9]*" required>
+            <div class="form-group" id="inputGroup">
+                <label for="searchInput" id="searchLabel">رقم الجلوس</label>
+                <input type="text" id="searchInput" placeholder="مثال: 2001970" required>
             </div>
             <button type="submit">🔍 بحث</button>
         </form>
         <div class="loading" id="loading">جاري البحث...</div>
         <div class="error" id="error"></div>
-        <div class="result" id="result"></div>
+        <div id="resultsContainer"></div>
     </div>
     <script src="/static/script.js"></script>
 </body>

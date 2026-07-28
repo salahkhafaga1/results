@@ -5,8 +5,8 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 20px;
+    align-items: flex-start;
+    padding: 40px 20px;
 }
 .container {
     background: white;
@@ -14,19 +14,44 @@ body {
     padding: 40px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     width: 100%;
-    max-width: 500px;
+    max-width: 560px;
 }
 h1 {
     text-align: center;
     color: #333;
-    margin-bottom: 10px;
-    font-size: 28px;
+    margin-bottom: 6px;
+    font-size: 26px;
 }
 .subtitle {
     text-align: center;
     color: #666;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     font-size: 14px;
+}
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: #f0f0f5;
+    border-radius: 10px;
+    padding: 4px;
+}
+.tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #888;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tab.active {
+    background: white;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .form-group { margin-bottom: 20px; }
 label {
@@ -49,7 +74,7 @@ input[type="text"]:focus {
     outline: none;
     border-color: #667eea;
 }
-button {
+button[type="submit"] {
     width: 100%;
     padding: 14px;
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -61,7 +86,7 @@ button {
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
 }
-button:hover {
+button[type="submit"]:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
 }
@@ -77,6 +102,7 @@ button:hover {
     color: #333;
     margin-bottom: 15px;
     text-align: center;
+    font-size: 20px;
 }
 .result-item {
     display: flex;
@@ -87,6 +113,30 @@ button:hover {
 .result-item:last-child { border-bottom: none; }
 .result-label { color: #888; font-weight: 600; }
 .result-value { color: #333; font-weight: 700; }
+.result-list {
+    margin-top: 20px;
+    display: none;
+}
+.result-list.show { display: block; }
+.result-card {
+    padding: 14px;
+    margin-bottom: 10px;
+    background: #f8f9ff;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid #e8e8ff;
+}
+.result-card:hover { background: #eef0ff; }
+.result-card .name { font-weight: 700; color: #333; font-size: 16px; }
+.result-card .meta { color: #888; font-size: 13px; margin-top: 4px; display: flex; gap: 16px; }
+.result-card .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.count-info {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
 .error {
     margin-top: 25px;
     padding: 15px;
