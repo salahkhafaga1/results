@@ -16,10 +16,13 @@
             <button class="tab" data-mode="name">الاسم</button>
         </div>
 
-        <form id="searchForm">
+        <form id="searchForm" autocomplete="off">
             <div class="form-group" id="inputGroup">
                 <label for="searchInput" id="searchLabel">رقم الجلوس</label>
-                <input type="text" id="searchInput" placeholder="مثال: 2001970" required>
+                <div class="input-wrapper">
+                    <input type="text" id="searchInput" placeholder="مثال: 2001970" required>
+                    <div id="suggestions" class="suggestions"></div>
+                </div>
             </div>
             <button type="submit">🔍 بحث</button>
         </form>

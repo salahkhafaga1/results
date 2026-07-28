@@ -54,6 +54,20 @@ def search_by_name(name: str, limit: int = 20):
     conn.close()
     return [{"seating_no": r[0], "arabic_name": r[1], "total_degree": r[2], "student_case_desc": r[3]} for r in rows]
 
+def suggest_names(query: str, limit: int = 8):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT DISTINCT arabic_name FROM results WHERE arabic_name LIKE ? LIMIT ?", (f"%{query}%", limit))
+    rows = [r[0] for r in c.fetchall()]
+    conn.close()
+    return rows
+
+@app.get("/suggest")
+async def suggest(q: str):
+    if len(q.strip()) < 2:
+        return {"names": []}
+    return {"names": suggest_names(q.strip())}
+
 @app.get("/search")
 async def search(seating_no: str = None, name: str = None):
     if seating_no:

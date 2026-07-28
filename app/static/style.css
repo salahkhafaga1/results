@@ -60,6 +60,7 @@ label {
     color: #555;
     font-weight: 600;
 }
+.input-wrapper { position: relative; }
 input[type="text"] {
     width: 100%;
     padding: 14px 16px;
@@ -74,6 +75,31 @@ input[type="text"]:focus {
     outline: none;
     border-color: #667eea;
 }
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 0 0 10px 10px;
+    max-height: 280px;
+    overflow-y: auto;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.suggestions.show { display: block; }
+.suggestions .item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s;
+}
+.suggestions .item:last-child { border-bottom: none; }
+.suggestions .item:hover, .suggestions .item.highlighted { background: #f5f5ff; }
+.suggestions .item mark { background: #e8e0ff; color: #333; border-radius: 3px; padding: 0 2px; }
 button[type="submit"] {
     width: 100%;
     padding: 14px;

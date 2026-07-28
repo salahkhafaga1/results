@@ -1,5 +1,7 @@
 let searchMode = 'seating';
 const MIN_NAME_LENGTH = 3;
+let suggestTimeout = null;
+let selectedSuggestion = -1;
 
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
@@ -8,6 +10,9 @@ document.querySelectorAll('.tab').forEach(tab => {
         searchMode = this.dataset.mode;
         const label = document.getElementById('searchLabel');
         const input = document.getElementById('searchInput');
+        const suggestions = document.getElementById('suggestions');
+        suggestions.classList.remove('show');
+        suggestions.innerHTML = '';
         if (searchMode === 'seating') {
             label.textContent = 'رقم الجلوس';
             input.placeholder = 'مثال: 2001970';
@@ -15,13 +20,87 @@ document.querySelectorAll('.tab').forEach(tab => {
             input.pattern = '[0-9]*';
         } else {
             label.textContent = 'الاسم';
-            input.placeholder = 'أدخل الاسم (3 أحرف على الأقل)';
+            input.placeholder = 'ابحث بالاسم...';
             input.inputMode = 'text';
             input.removeAttribute('pattern');
         }
         document.getElementById('resultsContainer').innerHTML = '';
         document.getElementById('error').classList.remove('show');
     });
+});
+
+// Autocomplete suggestions
+document.getElementById('searchInput').addEventListener('input', function() {
+    const suggestions = document.getElementById('suggestions');
+    if (searchMode === 'seating') {
+        suggestions.classList.remove('show');
+        return;
+    }
+    const query = this.value.trim();
+    if (query.length < 2) {
+        suggestions.classList.remove('show');
+        return;
+    }
+    clearTimeout(suggestTimeout);
+    selectedSuggestion = -1;
+    suggestTimeout = setTimeout(() => fetchSuggestions(query), 200);
+});
+
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    const items = document.querySelectorAll('#suggestions .item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedSuggestion = Math.min(selectedSuggestion + 1, items.length - 1);
+        updateHighlight(items);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedSuggestion = Math.max(selectedSuggestion - 1, -1);
+        updateHighlight(items);
+    } else if (e.key === 'Enter' && selectedSuggestion >= 0) {
+        e.preventDefault();
+        items[selectedSuggestion].click();
+    }
+});
+
+function updateHighlight(items) {
+    items.forEach((el, i) => {
+        el.classList.toggle('highlighted', i === selectedSuggestion);
+        if (i === selectedSuggestion) el.scrollIntoView({ block: 'nearest' });
+    });
+}
+
+async function fetchSuggestions(query) {
+    try {
+        const resp = await fetch(`/suggest?q=${encodeURIComponent(query)}`);
+        const data = await resp.json();
+        renderSuggestions(data.names, query);
+    } catch (e) {
+        // ignore
+    }
+}
+
+function renderSuggestions(names, query) {
+    const el = document.getElementById('suggestions');
+    if (!names.length) { el.classList.remove('show'); return; }
+    el.innerHTML = names.map(n => {
+        const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        const highlighted = n.replace(regex, '<mark>$1</mark>');
+        return `<div class="item" onclick="selectSuggestion('${n.replace(/'/g, "\\'")}')">${highlighted}</div>`;
+    }).join('');
+    el.classList.add('show');
+}
+
+function selectSuggestion(name) {
+    document.getElementById('searchInput').value = name;
+    document.getElementById('suggestions').classList.remove('show');
+    document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.input-wrapper')) {
+        document.getElementById('suggestions').classList.remove('show');
+    }
 });
 
 document.getElementById('searchForm').addEventListener('submit', async function(e) {
