@@ -1,118 +1,132 @@
 let searchMode = 'seating';
-const MIN_NAME_LENGTH = 2;
-let suggestTimeout = null;
-let selectedSuggestion = -1;
+const MIN_LENGTH = 2;
+const DEBOUNCE_MS = 300;
+let debounceTimer = null;
+let selectedIndex = -1;
 let isExactSearch = false;
 
+const searchInput = document.getElementById('searchInput');
+const searchForm = document.getElementById('searchForm');
+const suggestions = document.getElementById('suggestions');
+const errorDiv = document.getElementById('error');
+const loadingDiv = document.getElementById('loading');
+const container = document.getElementById('resultsContainer');
+const searchLabel = document.getElementById('searchLabel');
+
 document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', function() {
+    tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        searchMode = this.dataset.mode;
-        const label = document.getElementById('searchLabel');
-        const input = document.getElementById('searchInput');
-        const suggestions = document.getElementById('suggestions');
+        tab.classList.add('active');
+        searchMode = tab.dataset.mode;
         suggestions.classList.remove('show');
         suggestions.innerHTML = '';
         if (searchMode === 'seating') {
-            label.textContent = 'رقم الجلوس';
-            input.placeholder = 'مثال: 2001970';
-            input.inputMode = 'numeric';
-            input.pattern = '[0-9]*';
+            searchLabel.textContent = 'رقم الجلوس';
+            searchInput.placeholder = 'مثال: 2001970';
+            searchInput.inputMode = 'numeric';
+            searchInput.pattern = '[0-9]*';
         } else {
-            label.textContent = 'الاسم';
-            input.placeholder = 'ابحث بالاسم...';
-            input.inputMode = 'text';
-            input.removeAttribute('pattern');
+            searchLabel.textContent = 'الاسم';
+            searchInput.placeholder = 'ابحث بالاسم...';
+            searchInput.inputMode = 'text';
+            searchInput.removeAttribute('pattern');
         }
-        document.getElementById('resultsContainer').innerHTML = '';
-        document.getElementById('error').classList.remove('show');
+        container.innerHTML = '';
+        errorDiv.classList.remove('show');
     });
 });
 
-document.getElementById('searchInput').addEventListener('input', function() {
-    const suggestions = document.getElementById('suggestions');
+searchInput.addEventListener('input', () => {
     if (searchMode === 'seating') {
         suggestions.classList.remove('show');
         return;
     }
-    const query = this.value.trim();
-    if (query.length < 2) {
+    const query = searchInput.value.trim();
+    if (query.length < MIN_LENGTH) {
         suggestions.classList.remove('show');
         return;
     }
-    clearTimeout(suggestTimeout);
-    selectedSuggestion = -1;
-    suggestTimeout = setTimeout(() => fetchSuggestions(query), 200);
+    clearTimeout(debounceTimer);
+    selectedIndex = -1;
+    debounceTimer = setTimeout(() => fetchSuggestions(query), DEBOUNCE_MS);
 });
 
-document.getElementById('searchInput').addEventListener('keydown', function(e) {
-    const items = document.querySelectorAll('#suggestions .item');
+searchInput.addEventListener('keydown', (e) => {
+    const items = suggestions.querySelectorAll('.item');
     if (!items.length) return;
+
     if (e.key === 'ArrowDown') {
         e.preventDefault();
-        selectedSuggestion = Math.min(selectedSuggestion + 1, items.length - 1);
-        updateHighlight(items);
+        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+        highlightItem(items);
     } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        selectedSuggestion = Math.max(selectedSuggestion - 1, -1);
-        updateHighlight(items);
-    } else if (e.key === 'Enter' && selectedSuggestion >= 0) {
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        highlightItem(items);
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
         e.preventDefault();
-        items[selectedSuggestion].click();
+        items[selectedIndex].click();
+    } else if (e.key === 'Escape') {
+        suggestions.classList.remove('show');
+        selectedIndex = -1;
     }
 });
 
-function updateHighlight(items) {
+function highlightItem(items) {
     items.forEach((el, i) => {
-        el.classList.toggle('highlighted', i === selectedSuggestion);
-        if (i === selectedSuggestion) el.scrollIntoView({ block: 'nearest' });
+        el.classList.toggle('highlighted', i === selectedIndex);
+        if (i === selectedIndex) el.scrollIntoView({ block: 'nearest' });
     });
 }
 
 async function fetchSuggestions(query) {
     try {
-        const resp = await fetch(`/suggest?q=${encodeURIComponent(query)}`);
+        const resp = await fetch(`/api/search?name=${encodeURIComponent(query)}`);
         if (!resp.ok) return;
         const data = await resp.json();
-        renderSuggestions(data.names, query);
-    } catch (e) {}
+        renderDropdown(data.results, query);
+    } catch (_) {}
 }
 
-function renderSuggestions(names, query) {
-    const el = document.getElementById('suggestions');
-    if (!names || !names.length) {
-        el.innerHTML = '<div class="item" style="color:#999;cursor:default">لا توجد نتائج</div>';
-        el.classList.add('show');
+function renderDropdown(results, query) {
+    if (!results || !results.length) {
+        suggestions.innerHTML = '<div class="item empty">لا توجد نتائج</div>';
+        suggestions.classList.add('show');
         return;
     }
-    el.innerHTML = names.map(n => {
-        const safe = n.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-        const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-        const highlighted = safe.replace(regex, '<mark>$1</mark>');
-        return `<div class="item" data-name="${safe}" onclick="selectSuggestion(this)">${highlighted}</div>`;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'gi');
+    suggestions.innerHTML = results.map(s => {
+        const safe = s.arabic_name
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const highlighted = safe.replace(regex, (m) => `<mark>${m}</mark>`);
+        return `<div class="item" data-seating="${s.seating_no}" data-name="${safe}">${highlighted}</div>`;
     }).join('');
-    el.classList.add('show');
+    suggestions.classList.add('show');
 }
 
-function selectSuggestion(el) {
-    const name = el.dataset.name;
-    document.getElementById('searchInput').value = name;
-    document.getElementById('suggestions').classList.remove('show');
+suggestions.addEventListener('click', (e) => {
+    const item = e.target.closest('.item');
+    if (!item || item.classList.contains('empty')) return;
+    const name = item.dataset.name;
+    searchInput.value = name;
+    suggestions.classList.remove('show');
+    selectedIndex = -1;
     isExactSearch = true;
     doSearch(name);
-}
+});
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', (e) => {
     if (!e.target.closest('.input-wrapper')) {
-        document.getElementById('suggestions').classList.remove('show');
+        suggestions.classList.remove('show');
     }
 });
 
-document.getElementById('searchForm').addEventListener('submit', async function(e) {
+searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const query = document.getElementById('searchInput').value.trim();
-    if (searchMode === 'name' && query.length < MIN_NAME_LENGTH) {
+    const query = searchInput.value.trim();
+    if (searchMode === 'name' && query.length < MIN_LENGTH) {
         showError('يرجى إدخال حرفين على الأقل للبحث بالاسم');
         return;
     }
@@ -120,58 +134,48 @@ document.getElementById('searchForm').addEventListener('submit', async function(
 });
 
 async function doSearch(query) {
-    const errorDiv = document.getElementById('error');
-    const loadingDiv = document.getElementById('loading');
-    const container = document.getElementById('resultsContainer');
-
     errorDiv.classList.remove('show');
     container.innerHTML = '';
     loadingDiv.classList.add('show');
-
     try {
         let url;
         if (searchMode === 'seating') {
             url = `/search?seating_no=${encodeURIComponent(query)}`;
         } else {
             url = `/search?name=${encodeURIComponent(query)}`;
+            if (isExactSearch) {
+                url += '&exact=1';
+                isExactSearch = false;
+            }
         }
-        if (searchMode === 'name' && isExactSearch) {
-            url += '&exact=1';
-            isExactSearch = false;
-        }
-
         const resp = await fetch(url);
         let data;
-        try { data = await resp.json(); } catch (e) { data = {}; }
+        try { data = await resp.json(); } catch (_) { data = {}; }
         loadingDiv.classList.remove('show');
-
         if (!resp.ok || data.error) {
-            const msg = typeof data.error === 'string' ? data.error :
-                       Array.isArray(data.detail) ? data.detail.map(d => d.msg || JSON.stringify(d)).join('; ') :
-                       data.detail || 'حدث خطأ في الاستعلام';
+            const msg = typeof data.error === 'string' ? data.error
+                : Array.isArray(data.detail) ? data.detail.map(d => d.msg || JSON.stringify(d)).join('; ')
+                : data.detail || 'حدث خطأ في الاستعلام';
             showError(msg);
             return;
         }
-
         if (data.results) {
-            renderNameResults(data.results, data.count, query);
+            renderNameResults(data.results, data.count);
         } else {
             renderSingleResult(data);
         }
-    } catch (err) {
+    } catch (_) {
         loadingDiv.classList.remove('show');
         showError('حدث خطأ في الاتصال بالخادم');
     }
 }
 
 function showError(msg) {
-    const el = document.getElementById('error');
-    el.textContent = msg;
-    el.classList.add('show');
+    errorDiv.textContent = msg;
+    errorDiv.classList.add('show');
 }
 
 function renderSingleResult(data) {
-    const container = document.getElementById('resultsContainer');
     container.innerHTML = `
         <div class="result show">
             <h2>نتيجة الطالب</h2>
@@ -183,8 +187,7 @@ function renderSingleResult(data) {
     `;
 }
 
-function renderNameResults(results, count, query) {
-    const container = document.getElementById('resultsContainer');
+function renderNameResults(results, count) {
     let html = `<div class="count-info">تم العثور على ${count} نتيجة</div>`;
     html += '<div class="result-list show">';
     results.forEach(r => {
@@ -204,10 +207,10 @@ function renderNameResults(results, count, query) {
 }
 
 function searchBySeating(no) {
-    document.getElementById('searchInput').value = no;
+    searchInput.value = no;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector('[data-mode="seating"]').classList.add('active');
     searchMode = 'seating';
-    document.getElementById('searchLabel').textContent = 'رقم الجلوس';
+    searchLabel.textContent = 'رقم الجلوس';
     doSearch(no);
 }

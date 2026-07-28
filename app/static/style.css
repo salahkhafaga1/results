@@ -16,18 +16,9 @@ body {
     width: 100%;
     max-width: 560px;
 }
-h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 6px;
-    font-size: 26px;
-}
-.subtitle {
-    text-align: center;
-    color: #666;
-    margin-bottom: 24px;
-    font-size: 14px;
-}
+h1 { text-align: center; color: #333; margin-bottom: 6px; font-size: 26px; }
+.subtitle { text-align: center; color: #666; margin-bottom: 24px; font-size: 14px; }
+
 .tabs {
     display: flex;
     gap: 4px;
@@ -48,19 +39,12 @@ h1 {
     cursor: pointer;
     transition: all 0.2s;
 }
-.tab.active {
-    background: white;
-    color: #333;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+.tab.active { background: white; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
 .form-group { margin-bottom: 20px; }
-label {
-    display: block;
-    margin-bottom: 8px;
-    color: #555;
-    font-weight: 600;
-}
+label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
 .input-wrapper { position: relative; }
+
 input[type="text"] {
     width: 100%;
     padding: 14px 16px;
@@ -71,19 +55,17 @@ input[type="text"] {
     text-align: center;
     direction: ltr;
 }
-input[type="text"]:focus {
-    outline: none;
-    border-color: #667eea;
-}
+input[type="text"]:focus { outline: none; border-color: #667eea; }
+
 .suggestions {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 4px);
     left: 0;
     right: 0;
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 0 0 10px 10px;
-    max-height: 280px;
+    border-radius: 10px;
+    max-height: 340px;
     overflow-y: auto;
     display: none;
     z-index: 100;
@@ -98,8 +80,10 @@ input[type="text"]:focus {
     transition: background 0.15s;
 }
 .suggestions .item:last-child { border-bottom: none; }
-.suggestions .item:hover, .suggestions .item.highlighted { background: #f5f5ff; }
-.suggestions .item mark { background: #e8e0ff; color: #333; border-radius: 3px; padding: 0 2px; }
+.suggestions .item.empty { color: #999; cursor: default; text-align: center; }
+.suggestions .item:hover, .suggestions .item.highlighted { background: #f0f0ff; }
+.suggestions .item mark { background: #ddd6ff; color: #333; border-radius: 3px; padding: 0 2px; }
+
 button[type="submit"] {
     width: 100%;
     padding: 14px;
@@ -116,33 +100,16 @@ button[type="submit"]:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
 }
-.result {
-    margin-top: 25px;
-    padding: 20px;
-    border-radius: 12px;
-    background: #f8f9ff;
-    display: none;
-}
+
+.result { margin-top: 25px; padding: 20px; border-radius: 12px; background: #f8f9ff; display: none; }
 .result.show { display: block; }
-.result h2 {
-    color: #333;
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 20px;
-}
-.result-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #e8e8ff;
-}
+.result h2 { color: #333; margin-bottom: 15px; text-align: center; font-size: 20px; }
+.result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8e8ff; }
 .result-item:last-child { border-bottom: none; }
 .result-label { color: #888; font-weight: 600; }
-.result-value { color: #333; font-weight: 700; }
-.result-list {
-    margin-top: 20px;
-    display: none;
-}
+.result-value { color: #333; font-weight: 700; word-break: break-all; }
+
+.result-list { margin-top: 20px; display: none; }
 .result-list.show { display: block; }
 .result-card {
     padding: 14px;
@@ -155,14 +122,11 @@ button[type="submit"]:hover {
 }
 .result-card:hover { background: #eef0ff; }
 .result-card .name { font-weight: 700; color: #333; font-size: 16px; }
-.result-card .meta { color: #888; font-size: 13px; margin-top: 4px; display: flex; gap: 16px; }
+.result-card .meta { color: #888; font-size: 13px; margin-top: 4px; display: flex; gap: 16px; flex-wrap: wrap; }
 .result-card .meta span { display: inline-flex; align-items: center; gap: 4px; }
-.count-info {
-    text-align: center;
-    color: #888;
-    font-size: 13px;
-    margin-bottom: 12px;
-}
+
+.count-info { text-align: center; color: #888; font-size: 13px; margin-bottom: 12px; }
+
 .error {
     margin-top: 25px;
     padding: 15px;
@@ -174,11 +138,17 @@ button[type="submit"]:hover {
     font-weight: 600;
 }
 .error.show { display: block; }
-.loading {
-    margin-top: 25px;
-    text-align: center;
-    color: #667eea;
-    display: none;
-    font-weight: 600;
-}
+
+.loading { margin-top: 25px; text-align: center; color: #667eea; display: none; font-weight: 600; }
 .loading.show { display: block; }
+
+@media (max-width: 480px) {
+    body { padding: 20px 12px; }
+    .container { padding: 24px 16px; }
+    h1 { font-size: 22px; }
+    input[type="text"] { font-size: 16px; padding: 12px 14px; }
+    button[type="submit"] { font-size: 16px; padding: 12px; }
+    .suggestions { max-height: 260px; }
+    .suggestions .item { padding: 10px 14px; font-size: 14px; }
+    .result-card .meta { gap: 10px; font-size: 12px; }
+}

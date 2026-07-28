@@ -1,5 +1,6 @@
-import os, sqlite3
-from fastapi import FastAPI, Request
+import os
+import sqlite3
+from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -42,10 +43,6 @@ def query_student(seating_no: int):
     conn.close()
     return row
 
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
 def search_by_name(name: str, exact: bool = False, limit: int = 100):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -66,9 +63,7 @@ def suggest_names(query: str):
     return rows
 
 @app.get("/suggest")
-async def suggest(q: str):
-    if len(q.strip()) < 2:
-        return {"names": []}
+async def suggest(q: str = Query(..., min_length=2)):
     return {"names": suggest_names(q.strip())}
 
 @app.get("/search")
@@ -94,6 +89,15 @@ async def search(seating_no: str = None, name: str = None, exact: str = "0"):
             return {"error": f"لم يتم العثور على طالب بهذا الاسم"}
         return {"results": results, "count": len(results)}
     return {"error": "يرجى إدخال رقم جلوس أو اسم"}
+
+@app.get("/api/search")
+async def api_search(name: str = Query(..., min_length=2)):
+    results = search_by_name(name, limit=10)
+    return {"results": results, "count": len(results)}
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
